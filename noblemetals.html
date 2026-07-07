@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>귀금속 원소 탐구실</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg-color: #0b0d12;
+      --card-bg: #131722;
+      --gold: #d4af37;
+      --gold-light: #f3e5ab;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Nanum Gothic', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+    }
+
+    header {
+      background: linear-gradient(180deg, #161b26 0%, #0b0d12 100%);
+      padding: 35px 20px;
+      text-align: center;
+      border-bottom: 2px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
+
+    header p {
+      margin: 12px 0 0 0;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .spin-info-container {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .btn-spin {
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #ea580c 100%);
+      color: white;
+      border: none;
+      padding: 14px 35px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      font-family: 'Nanum Gothic', sans-serif;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(219, 39, 119, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .nav-buttons {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+      margin-bottom: 35px;
+    }
+
+    @media (max-width: 1024px) {
+      .nav-buttons { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .nav-buttons { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* 기존 기본 버튼 외관 유지하되 마우스 반응 설정 */
+    .btn-element {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 15px 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      font-family: 'Nanum Gothic', sans-serif;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .btn-element span.num { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px; }
+    .btn-element span.sym { font-size: 1.5rem; margin-bottom: 4px; font-weight: 700; }
+
+    /* ----------------------------------------------------
+       [추가] 원소별 고유의 리얼 메탈릭 광택 색상 효과 클래스 
+       ---------------------------------------------------- */
+    /* 루테늄: 중후하고 세련된 스틸 그레이 광택 */
+    .metal-ru { background: linear-gradient(135deg, #475569 0%, #94a3b8 50%, #334155 100%); border-color: #64748b; }
+    .metal-ru span.sym { color: #f8fafc; text-shadow: 0 0 8px rgba(255,255,255,0.6); }
+    .metal-ru span.num { color: #cbd5e1; }
+    .metal-ru:hover, .metal-ru.active { border-color: #f1f5f9; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(148, 163, 184, 0.4), inset 0 2px 4px rgba(255,255,255,0.4); }
+
+    /* 로듐: 눈부시도록 맑고 화사한 플래티넘 화택 광택 */
+    .metal-rh { background: linear-gradient(135deg, #cbd5e1 0%, #ffffff 50%, #94a3b8 100%); border-color: #e2e8f0; }
+    .metal-rh span.sym { color: #0f172a; text-shadow: 0 0 8px rgba(255,255,255,0.9); }
+    .metal-rh span.num { color: #334155; }
+    .metal-rh:hover, .metal-rh.active { border-color: #ffffff; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(226, 232, 240, 0.6), inset 0 2px 4px rgba(255,255,255,0.8); }
+
+    /* 팔라듐: 묵직하고 차가운 강철 빛깔 실버 광택 */
+    .metal-pd { background: linear-gradient(135deg, #64748b 0%, #cbd5e1 50%, #475569 100%); border-color: #94a3b8; }
+    .metal-pd span.sym { color: #0f172a; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+    .metal-pd span.num { color: #1e293b; }
+    .metal-pd:hover, .metal-pd.active { border-color: #f1f5f9; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(203, 213, 225, 0.5), inset 0 2px 4px rgba(255,255,255,0.5); }
+
+    /* 은: 빛을 순수하게 반사하는 영롱한 리얼 실버 광택 */
+    .metal-ag { background: linear-gradient(135deg, #cbd5e1 0%, #ffffff 40%, #e2e8f0 60%, #94a3b8 100%); border-color: #f1f5f9; }
+    .metal-ag span.sym { color: #1e293b; text-shadow: 0 0 8px rgba(255,255,255,0.9); }
+    .metal-ag span.num { color: #475569; }
+    .metal-ag:hover, .metal-ag.active { border-color: #ffffff; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(255, 255, 255, 0.7), inset 0 2px 4px rgba(255,255,255,0.9); }
+
+    /* 오스뮴: 신비롭고 영롱한 블루-실버 광택 */
+    .metal-os { background: linear-gradient(135deg, #2563eb 0%, #93c5fd 50%, #1e3a8a 100%); border-color: #60a5fa; }
+    .metal-os span.sym { color: #ffffff; text-shadow: 0 0 8px rgba(147, 197, 253, 0.8); }
+    .metal-os span.num { color: #bfdbfe; }
+    .metal-os:hover, .metal-os.active { border-color: #93c5fd; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(96, 165, 250, 0.6), inset 0 2px 4px rgba(255,255,255,0.5); }
+
+    /* 이리듐: 극도로 견고함이 흐르는 차가운 은색 광택 */
+    .metal-ir { background: linear-gradient(135deg, #78716c 0%, #f5f5f4 50%, #44403c 100%); border-color: #a8a29e; }
+    .metal-ir span.sym { color: #1c1917; text-shadow: 0 0 6px rgba(255,255,255,0.7); }
+    .metal-ir span.num { color: #292524; }
+    .metal-ir:hover, .metal-ir.active { border-color: #f5f5f4; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(214, 211, 209, 0.5), inset 0 2px 4px rgba(255,255,255,0.6); }
+
+    /* 백금: 우아하고 고결한 플래티넘 크롬 광택 */
+    .metal-pt { background: linear-gradient(135deg, #9ca3af 0%, #f9fafb 50%, #4b5563 100%); border-color: #d1d5db; }
+    .metal-pt span.sym { color: #111827; text-shadow: 0 0 8px rgba(255,255,255,0.8); }
+    .metal-pt span.num { color: #1f2937; }
+    .metal-pt:hover, .metal-pt.active { border-color: #ffffff; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(243, 244, 246, 0.6), inset 0 2px 4px rgba(255,255,255,0.7); }
+
+    /* 금: 부와 찬란함을 대변하는 24K 딥 골드 광택 */
+    .metal-au { background: linear-gradient(135deg, #d97706 0%, #fef08a 45%, #ca8a04 55%, #78350f 100%); border-color: #fde047; }
+    .metal-au span.sym { color: #451a03; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
+    .metal-au span.num { color: #78350f; }
+    .metal-au:hover, .metal-au.active { border-color: #fef08a; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(253, 224, 71, 0.7), inset 0 2px 4px rgba(255,255,255,0.6); }
+    /* ---------------------------------------------------- */
+
+    .placeholder-text {
+      text-align: center;
+      padding: 120px 20px;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      border: 2px dashed #1e293b;
+      border-radius: 16px;
+      background: rgba(19, 23, 34, 0.3);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 30px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+
+    .canvas-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle, #1a2035 0%, #080a10 100%);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      min-height: 450px;
+    }
+
+    .prop-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .prop-table tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .prop-table tr:last-child { border-bottom: none; }
+    .prop-table td { padding: 14px 10px; vertical-align: middle; }
+    .prop-table td.label { color: var(--text-muted); width: 38%; font-weight: 700; }
+    .prop-table td.val { font-weight: 700; color: #ffffff; }
+    
+    .price-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .price-ticker { font-size: 1.15rem; font-weight: bold; }
+    
+    .btn-unit {
+      background: #1e293b;
+      color: var(--gold-light);
+      border: 1px solid #334155;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .explanation-section {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 5fr 4fr;
+      gap: 30px;
+      background: linear-gradient(180deg, #161c2e 0%, #0f1322 100%);
+    }
+
+    @media (max-width: 850px) {
+      .explanation-section { grid-template-columns: 1fr; }
+    }
+
+    .exp-text h3 { color: var(--gold); margin-top: 0; font-size: 1.5rem; font-weight: 800; border-left: 5px solid var(--gold); padding-left: 12px; }
+    .exp-text p { line-height: 1.8; color: #e2e8f0; font-size: 1.05rem; text-align: justify; }
+
+    /* [추가] 개별 게임하러 가기 전용 단추 스타일 */
+    .game-link-container {
+      margin-top: 25px;
+      text-align: center;
+    }
+    .game-btn {
+      display: inline-block;
+      text-decoration: none;
+      font-family: 'Nanum Gothic', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      padding: 12px 30px;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+    .game-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+    }
+
+    .graphic-box {
+      background: #090b11;
+      border-radius: 12px;
+      border: 1px solid rgba(212,175,55,0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      min-height: 300px;
+    }
+
+    .graphic-box h4 { margin: 0 0 12px 0; color: var(--gold-light); font-size: 1.1rem; font-weight: 700; }
+
+    /* Modal Layout */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 2px solid var(--gold);
+      border-radius: 20px;
+      max-width: 850px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 35px;
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 15px; right: 25px;
+      font-size: 2.3rem; color: var(--text-muted); cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-muted);
+      font-size: 1rem;
+      border-top: 1px solid var(--border-color);
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>✨ 귀금속 원소 탐구실 ✨</h1>
+    <p>현대물리학의 무대, 8가지 고귀한 원소의 비밀 물리 특성 알아보기</p>
+  </header>
+
+  <div class="container">
+    
+    <div class="spin-info-container">
+      <button class="btn-spin" onclick="openSpinModal()">💡 필수 개념: '스핀(Spin)'과 슈테른-게를라흐 실험실 입장</button>
+    </div>
+
+    <!-- [변경] 원소 단추들에 빛나는 메탈 그라데이션 광택 클래스 적용 -->
+    <div class="nav-buttons">
+      <button class="btn-element metal-ru" onclick="selectElement('Ru')"><span class="num">44</span><span class="sym">Ru</span>루테늄</button>
+      <button class="btn-element metal-rh" onclick="selectElement('Rh')"><span class="num">45</span><span class="sym">Rh</span>로듐</button>
+      <button class="btn-element metal-pd" onclick="selectElement('Pd')"><span class="num">46</span><span class="sym">Pd</span>팔라듐</button>
+      <button class="btn-element metal-ag" onclick="selectElement('Ag')"><span class="num">47</span><span class="sym">Ag</span>은</button>
+      <button class="btn-element metal-os" onclick="selectElement('Os')"><span class="num">76</span><span class="sym">Os</span>오스뮴</button>
+      <button class="btn-element metal-ir" onclick="selectElement('Ir')"><span class="num">77</span><span class="sym">Ir</span>이리듐</button>
+      <button class="btn-element metal-pt" onclick="selectElement('Pt')"><span class="num">78</span><span class="sym">Pt</span>백금</button>
+      <button class="btn-element metal-au" onclick="selectElement('Au')"><span class="num">79</span><span class="sym">Au</span>금</button>
+    </div>
+
+    <div id="placeholder" style="
+  background: linear-gradient(135deg, rgba(25, 30, 45, 0.9) 0%, rgba(15, 18, 28, 0.95) 100%);
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 40px 30px;
+  margin-bottom: 35px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+">
+  <div style="text-align: center; margin-bottom: 30px; position: relative;">
+    <div style="font-size: 4rem; filter: drop-shadow(0 0 15px rgba(214,175,55,0.6)); margin-bottom: 10px;">
+      👑 🪙 💎 💍 👑
+    </div>
+    <p style="color: var(--gold-light); font-size: 1.3rem; font-weight: 800; margin: 0; letter-spacing: 1px;">
+      "인류의 탐욕과 선망의 대상에서, 첨단 미래를 여는 양자 소자로!"
+    </p>
+  </div>
+
+  <div style="line-height: 1.8; font-size: 1.1rem; color: #e2e8f0; text-align: justify; margin-bottom: 35px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+    우리가 흔히 부와 아름다움의 상징으로만 여기던 <span style="color: var(--gold); font-weight: 800;">금(Au), 은(Ag), 백금(Pt)</span> 등의 고귀한 귀금속 원소들! 이들이 시간이 흘러도 녹슬지 않고 눈부신 광채를 유지하는 진짜 이유는 무엇일까요? ✨<br><br>
+    그 비밀은 놀랍게도 눈에 보이지 않는 원자 세상 속, 전자의 그 기묘한 회전 운동인 <span style="color: #38bdf8; font-weight: 800;">'스핀(Spin)'</span>, 거대한 원자핵이 만들어내는 아인슈타인의 <span style="color: #ef4444; font-weight: 800;">특수상대성이론</span>과 슈뢰딩거의 고양이로 유명한 <span style="color: #22c55e; font-weight: 800;">양자역학</span>에 숨어 있습니다. 격동하는 미시 세계 속에서 전자들이 빚어낸 완벽한 물리적 안정성이 바로 귀금속의 고결함을 만드는 근원입니다. 🌌<br><br>
+    이제 귀금속은 단순히 금고 속에 갇힌 보물이 아닙니다. 스마트폰, 초고속 반도체, 미래의 양자 컴퓨터까지 인류 최첨단 과학기술의 심장을 뛰게 하는 핵심 신소재로 대변신하고 있습니다. <b style="color: var(--gold-light);">원소 단추를 눌러</b>, 가치 있는 시세 뒤에 숨겨진 경이로운 양자역학의 비밀과 살아 숨 쉬는 물리 실험실을 직접 가동해 보세요! 🚀
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+    
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(214,175,55,0.2); border-radius: 12px; padding: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);">
+      <h3 style="margin-top: 0; color: var(--gold); font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+        🎨 황금빛의 비밀
+      </h3>
+      <p style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
+        원자핵이 너무 무거워 전자가 <b>빛의 속도</b>에 가깝게 비행하며 나타나는 상대론적 에너지 변화가 특유의 아름다운 색채를 결정합니다.
+      </p>
+    </div>
+
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(56,189,248,0.2); border-radius: 12px; padding: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);">
+      <h3 style="margin-top: 0; color: #38bdf8; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+        ⚡ 팽이처럼 도는 전자의 '스핀'
+      </h3>
+      <p style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
+        전자의 자석 성질인 스핀을 조종하여, 열이 나지 않는 초고속 메모리 컴퓨터 칩을 만드는 <b>'스핀트로닉스'</b>의 핵심 무대입니다.
+      </p>
+    </div>
+
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px; padding: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.3);">
+      <h3 style="margin-top: 0; color: #22c55e; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+        📈 경제와 과학의 만남 (STEAM)
+      </h3>
+      <p style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
+        인류 경제 시스템에서 수천 년간 인정받은 <b>귀금속의 몸값(시세)</b> 속에 자연계의 가장 정밀한 물리 법칙이 투영되어 있습니다.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+    <div class="main-grid" id="mainWorkspace">
+      
+      <div class="canvas-container">
+        <canvas id="bohrCanvas" width="500" height="500"></canvas>
+      </div>
+
+      <div class="card">
+        <h2 id="elemHeader" style="margin-top:0; color:var(--gold); border-bottom:2px solid var(--border-color); padding-bottom:12px; font-weight:800;">원소 분석실</h2>
+        <table class="prop-table">
+          <tr><td class="label">이름 (국문/영문)</td><td class="val"><span id="pKoName"></span> (<span id="pEnName"></span>)</td></tr>
+          <tr><td class="label">기호 및 원자번호</td><td class="val" id="pSymbolNum"></td></tr>
+          <tr><td class="label">평균 원자량</td><td class="val" id="pWeight"></td></tr>
+          <tr><td class="label">양자역학 전자배치</td><td class="val" id="pConfig"></td></tr>
+          <tr><td class="label">물리적 전기전도율</td><td class="val" id="pConductivity"></td></tr>
+          <tr>
+            <td class="label">실시간 현물 시세</td>
+            <td class="val">
+              <div class="price-container">
+                <span class="price-ticker" id="pPrice" style="color: #eab308;">⚠️ 실시간 데이터 확인 중...</span>
+                <button class="btn-unit" onclick="openUnitModal()">⚖️ 1 oz = ? g</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="label">1g당 환산 시세</td>
+            <td class="val" id="pPriceGram" style="color: #94a3b8;">
+              대기 중...
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card explanation-section">
+        <div class="exp-text">
+          <h3 id="expTitle">현상 주제</h3>
+          <p id="expDetail">설명문 구역</p>
+          
+          <!-- [추가] 원소별 게임 링크가 동적으로 생성될 구역 -->
+          <div class="game-link-container" id="gameLinkArea"></div>
+        </div>
+        <div class="graphic-box">
+          <h4 id="animLabel">시뮬레이션 가동</h4>
+          <canvas id="appAnimCanvas" width="400" height="280"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    제작자: 해누리중학교 과학교사 남국현
+  </footer>
+
+  <div id="spinModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeSpinModal()">&times;</span>
+      <h2 style="color:var(--gold); border-bottom: 2px solid var(--gold); padding-bottom:12px; margin-top:0; font-weight:800;">물리학의 혁명: 전자의 '스핀(Spin)'과 슈테른-게를라흐 실험</h2>
+      <p style="line-height:1.8; font-size:1.05rem;">
+        중고등학교 과학 시간엔 전자가 단순히 원자핵 주변을 궤도 비행하는 음(-)전하 알갱이라고 배우죠! 하지만 전자는 스스로 팽이처럼 제자리에서 빙글빙글 도는 고유의 회전 운동 성질을 가집니다. 이를 양자역학에서는 <strong>'스핀(Spin)'</strong>이라고 불러요. 전자가 돌면서 미세한 '자석 성질(자성)'을 띠게 되는 것이죠!
+      </p>
+      
+      <div style="background:#05070a; border-radius:12px; padding:20px; text-align:center; margin:25px 0; border:1px solid #334155;">
+        <h4 style="margin-top:0; color:#22c55e; font-weight:700;">💡 슈테른-게를라흐(Stern-Gerlach) 가상 가속기</h4>
+        <canvas id="sgCanvas" width="750" height="220"></canvas>
+        <p style="font-size:0.95rem; color:var(--text-muted); margin:10px 0 0 0;">불균일한 N-S 극 자석 사이를 지나간 은 원자 빔이 중간 없이 위(+1/2)와 아래(-1/2) 단 두 갈래로만 갈라집니다.</p>
+      </div>
+
+      <p style="line-height:1.8; font-size:1.05rem;">
+        1922년, 슈테른 and 게를라흐 박사는 은(Ag) 원자들을 뿜어내 강력한 특수 자석 사이를 통과시켰어요. 고전 물리학 예측대로라면 자석 알갱이들의 방향이 제각각이니 스크린에 넓고 연속적인 띠가 퍼져서 그려져야 했어요.
+      </p>
+      <p style="line-height:1.8; font-size:1.05rem; background:rgba(212,175,55,0.08); padding:18px; border-radius:10px; border-left:5px solid var(--gold); margin:20px 0;">
+        🚀 <strong>실험의 대반전 결과!</strong> 원자 빔은 퍼지지 않고 오직 <strong>위(Up)와 아래(Down) 딱 두 군데의 불연속적인 점</strong>으로 정확하게 쪼개졌습니다. 이것이 바로 전자의 스핀 방향이 중간값 없이 양자화 되어 존재한다는 위대한 증거입니다. 오늘날 인류는 이 스핀을 조종하여 초고속 컴퓨터 칩을 만드는 <strong>스핀트로닉스(Spintronics)</strong> 시대를 열어가고 있답니다!
+      </p>
+    </div>
+  </div>
+
+  <div id="unitModal" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <span class="close-modal" onclick="closeUnitModal()">&times;</span>
+      <h3 style="color:var(--gold); border-bottom: 2px solid var(--border-color); padding-bottom:10px; margin-top:0;">⚖️ 국제 귀금속 거래 단위 정보</h3>
+      <p style="line-height:1.7; font-size:1rem; text-align:justify;">
+        전 세계 금융 시장에서 고시하는 모든 귀금속의 1온스는 일상에서 쓰는 상형 온스(28.3495g)가 아니라, 오직 보석과 귀금속에만 사용하는 <strong>'트로이 온스 (Troy Ounce, 기호 oz t)'</strong>를 기준으로 합니다.
+      </p>
+      <div style="background:#090b11; border:1px dashed var(--gold); border-radius:10px; padding:15px; text-align:center; margin:15px 0;">
+        <span style="font-size:0.9rem; color:var(--text-muted); display:block; margin-bottom:5px;">진공 상태 정밀 물리학적 환산 기준</span>
+        <strong style="font-size:1.35rem; color:#22c55e; letter-spacing:0.5px;">1 oz t = 31.1034768 g</strong>
+      </div>
+      <p style="line-height:1.6; font-size:0.95rem; color:var(--text-muted); margin-bottom:0;">
+        💡 <strong>팁:</strong> 화면에 표시된 온스당 달러 가격을 <strong>31.1034768</strong>로 나누면 대한민국 안방에서 친숙하게 사용하는 <strong>'1그램(g)당 달러 가격'</strong>을 정확하게 계산할 수 있습니다!
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // [보안 우회 보완] 효과음 재생 엔진 (try-catch 및 브라우저 iframe 제약 우회 적용)
+    function playClickSound() {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        
+        const audioCtx = new AudioContextClass();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(900, audioCtx.currentTime); 
+        oscillator.frequency.exponentialRampToValueAtTime(450, audioCtx.currentTime + 0.08); 
+        
+        gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.08);
+      } catch(e) {
+        console.warn("오디오 컨텍스트가 차단되었거나 실행할 수 없습니다:", e.message);
+      }
+    }
+
+    // [변경] 설명문 텍스트 내 중학생 눈높이 이모지 반영 & 개별 관리용 게임 하러 가기 링크 분할 매핑
+    const elementData = {
+      Ru: {
+        koName: '루테늄', enName: 'Ruthenium', num: 44, weight: '101.07',
+        shells: [2, 8, 18, 15, 1], latexConfig: '\\mathrm{[Kr] \\, 4d^7 \\, 5s^1}',
+        conductivity: '13.7 × 10⁶ S/m', coreColor: '#a3b8cc',
+        title: '나노 자석들의 \'청기 백기\' 게임! 자석을 반대로 고정하는 마법의 벽',
+        desc: `<strong>🎨 중후한 회색빛의 비밀:</strong> 루테늄은 다른 번쩍이는 귀금속들과 달리 약간 어둡고 차분한 '회색빛' 💡 전등을 켠 듯한 모습을 하고 있어요. 이는 루테늄 표면에 있는 전자들이 빛을 마주했을 때, 모든 색깔의 빛🌈을 골고루 조금씩 흡수해 버리기 때문이에요. 빛이 100% 다 튕겨 나오면 새하얗게 보이지만, 루테늄은 빛을 살짝 머금기 때문에 귀금속이면서도 아주 멋지고 세련된 회색 매력😎을 뿜어내게 된답니다!<br><br>루테늄은 아주 단단하고 다른 물질 때문에 잘 변하지 않는 튼튼한 금속💪이에요. 첨단 반도체 세상에서는 아주 얇은 루테늄 막을 사이에 두고 자석판 🧲 두 개를 위아래로 겹쳐놓는 기술을 사용해요. 그러면 두 자석판의 자성 방향이 서로 정확하게 반대 방향(위⬆️와 아래⬇️)을 바라보며 자물쇠 🔒처럼 단단히 잠기는 신기한 현상이 일어나요. 물리학에서는 이를 '반강자성 결합'이라고 부른답니다. 이 성질을 활용하면 스마트폰📱을 강력한 자석이나 가전제품 가까이에 대어도 내부 데이터가 쉽게 지워지지 않는 안전한 컴퓨터 메모리(MRAM) 💾의 핵심 방어막🛡️을 만들 수 있어요.`,
+        animType: 'antiFerro', animLabel: '루테늄 반강자성 결합층 (상하 반대 고정 현상)',
+        // [게임하러 가기] 개별 커스텀 버튼 (추후 개별 원소 파일 추가 및 명칭 수정 용이)
+        gameBtn: `<a href="rugame.html" class="game-btn metal-ru" style="color: #f8fafc; border: 1px solid #64748b;">루테늄: [게임하러 가기] 🎮</a>`
+      },
+      Rh: {
+        koName: '로듐', enName: 'Rhodium', num: 45, weight: '102.91',
+        shells: [2, 8, 18, 16, 1], latexConfig: '\\mathrm{[Kr] \\, 4d^8 \\, 5s^1}',
+        conductivity: '21.1 × 10⁶ S/m', coreColor: '#e2e8f0',
+        title: '전기 대신 \'파도\'를 타서 열이 나지 않는 초고속 신호 전달',
+        desc: `<strong>🎨 눈부신 새하얀 빛의 비밀:</strong> 로듐은 거울🪞보다 더 완벽하게 모든 빛을 반사해서 눈이 부실 정도로 '새하얗고 맑은 은백색' ✨으로 빛나요. 로듐 내부의 전자들은 우리가 볼 수 있는 빨주노초파남보 모든 무지개 색깔🌈의 빛을 어느 하나 편애하지 않고 거의 100% 그대로 다 튕겨내요. 그래서 세상에서 가장 깨끗하고 밝은 하얀 고귀함👑을 보여주는 것이랍니다!<br><br>로듐은 거울처럼 빛을 아주 잘 반사하고 아름다워서 아주 귀하고 비싸게 거래되는 금속💎이에요. 과학자들이 철과 로듐을 합친 특수한 소자에 미세한 안테나 전파 자극📡을 주었더니, 내부에 있는 전자의 자석 성질(스핀)들이 마치 단체로 제자리에서 팽이처럼 비스듬히 원을 그리며 도는 세차 운동🌀을 시작했어요. 이때 로듐은 펌프🚰처럼 작동하여 이 회전 에너지를 인접한 물질로 밀어내는데, 이를 '스핀 펌핑'이라고 해요. 일반 전선처럼 전자가 직접 달려서 마찰열🔥을 내는 대신 자석 성질의 파도🌊('스핀파')만 옆으로 넘겨주기 때문에, 아무리 오래 써도 뜨거워지지 않는 꿈의 초고속 컴퓨터 칩💻을 만드는 데 쓰인답니다.`,
+        animType: 'spinPump', animLabel: '로듐 스핀 펌핑 및 에너지 파동 전달',
+        gameBtn: `<a href="rhgame.html" class="game-btn metal-rh" style="color: #0f172a; border: 1px solid #e2e8f0;">로듐: [게임하러 가기] 🎮</a>`
+      },
+      Pd: {
+        koName: '팔라듐', enName: 'Palladium', num: 46, weight: '106.42',
+        shells: [2, 8, 18, 18, 0], latexConfig: '\\mathrm{[Kr] \\, 4d^{10}}',
+        conductivity: '9.5 × 10⁶ S/m', coreColor: '#cbd5e1',
+        title: '누워 있는 자석 알갱이들을 수직으로 똑바로 세우는 힘!',
+        desc: `<strong>🎨 차가운 강철 회색빛의 비밀:</strong> 팔라듐은 은색 중에서도 약간 묵직하고 차가운 '강철 느낌의 회색빛' ⚙️을 띠고 있어요. 팔라듐은 독특하게도 가장 바깥쪽 전자 껍질을 비워두고 바로 안쪽 껍질에 전자들을 꽉 채운 특이한 전자 배치(\\(\\mathrm{4d^{10}}\\))를 가지고 있거든요. 이 꽉 찬 전자들이 빛💡과 부딪힐 때 특정 에너지를 미세하게 흡수하면서, 일반 은보다 훨씬 깊고 중후한 회색빛 감성🖤을 만들어냅니다.<br><br>팔라듐은 보통 자동차의 배기가스를 깨끗하게 걸러주는 촉매 장치🚗로 유명하지만, 미래 소자 공학에서는 자석 알갱이들의 길잡이🧭가 되어 줍니다. 코발트나 철 같은 자석 물질과 팔라듐을 원자 몇 개 두께로 아주 얇게 샌드위치🥪처럼 번갈아 쌓으면, 원래 옆으로 벌렁 누워있으려던 전자의 자석 방향들이 갑자기 하늘과 땅을 향해 '수직으로 꼿꼿하게' 일렬 정렬🧍‍♂️하게 돼요. 이를 물리학에서 '수직 자기 이방성'이라고 해요. 이 덕분에 메모리 소자의 크기를 아주 작게 줄여도 자석 성질이 흐려지거나 흐트러지지 않아서, 손톱만 한 칩 안에 엄청나게 많은 방대한 정보📚를 꽉꽉 압축해서 저장할 수 있습니다💾.`,
+        animType: 'perpendicular', animLabel: '팔라듐 경계면의 수직 자기 정렬',
+        gameBtn: `<a href="pdgame.html" class="game-btn metal-pd" style="color: #0f172a; border: 1px solid #94a3b8;">팔라듐: [게임하러 가기] 🎮</a>`
+      },
+      Ag: {
+        koName: '은', enName: 'Silver', num: 47, weight: '107.87',
+        shells: [2, 8, 18, 18, 1], latexConfig: '\\mathrm{[Kr] \\, 4d^{10} \\, 5s^1}',
+        conductivity: '63.0 × 10⁶ S/m', coreColor: '#ffffff',
+        title: '양자 세계의 회전 신호를 전기로 바꾸는 똑똑한 번역기',
+        desc: `<strong>🎨 완벽한 하얀 은빛의 비밀:</strong> 은은 지구상의 모든 금속 중에서 빛을 가장 잘 튕겨내는 '반사율 1등' 원소🥇예요! 들어오는 빛의 무려 95% 이상을 완벽하게 반사✨하기 때문에, 우리 눈에는 어떠한 색깔도 섞이지 않은 가장 순수하고 깨끗한 '새하얀 광채'🤍로 보이게 돼요. 옛날부터 은을 거울의 뒷면에 바르고 귀금속 반지💍로 사랑해 온 이유가 바로 이 완벽한 반사 능력 덕분이랍니다.<br><br>은은 우리가 주변에서 볼 수 있는 모든 물질 중에서 전기가 가장 잘 통하는 '전기 전도율 압도적 1등' 원소⚡예요! 최근 첨단 양자물리학계에서는 이 뛰어난 전도체인 은을 '비스무트'라는 특이한 원소와 딱 붙여놓으면 마법🪄 같은 일이 일어난다는 것을 발견했어요. 외부에서 빙글되었을 때 전자의 자석 흐름🌀을 주입하면, 은의 경계면을 지나면서 이 신호가 순식간에 우리가 컴퓨터나 스마트폰📱에서 쓰는 일반적인 '전기 전류'로 완벽하게 변환돼요. 이를 '역 에델스타인 효과'라고 부르며, 눈에 보이지 않는 양자 양방향 신호를 전선 속 전기로 이어주는 '초고속 번역기 회로'🔌로 활발히 응용되고 있습니다.`,
+        animType: 'spinToCharge', animLabel: '銀-비스무트 경계면의 신호 변환',
+        gameBtn: `<a href="aggame.html" class="game-btn metal-ag" style="color: #1e293b; border: 1px solid #f1f5f9;">은: [게임하러 가기] 🎮</a>`
+      },
+      Os: {
+        koName: '오스뮴', enName: 'Osmium', num: 76, weight: '190.23',
+        shells: [2, 8, 18, 32, 14, 2], latexConfig: '\\mathrm{[Xe] \\, 4f^{14} \\, 5d^6 \\, 6s^2}',
+        conductivity: '10.9 × 10⁶ S/m', coreColor: '#b0c4de',
+        title: '지구에서 가장 무거운 원소가 만든 가짜 자기장 소용돌이',
+        desc: `<strong>🎨 은은한 푸른빛의 비밀:</strong> 오스뮴은 일반적인 은백색 귀금속들과 달리 오묘하고 매혹적인 '은은한 푸른빛'💙을 띠는 특별한 원소예요. 이 푸른빛의 비밀 역시 엄청난 원자핵의 무게⚖️ 때문입니다. 핵이 너무 무겁다 보니 전자가 빛의 속도🚀에 가깝게 움직이게 되고, 이 과정에서 전자의 에너지 상태가 변하면서 붉은색이나 노란색 계열의 빛을 쏙 흡수해 버려요🧽. 그 결과 흡수되지 않고 튕겨 나온 신비로운 푸른빛이 우리 눈에 도달하게 되는 것이죠!<br><br>오스뮴은 같은 부피 대비 무게가 지구에서 가장 무거운 '밀도의 왕'👑이자, 엄청나게 단단해서 흠집이 나지 않는 독특한 금속💎이에요. 오스뮴은 원자 자체가 너무 무겁고 거대하기 때문에, 중심에 있는 원자핵이 플러스(+) 인력으로 주변의 전자들을 무시무시한 속도로 끌어당겨요🧲. 이 때문에 전자가 거의 빛의 속도에 가깝게 강제로 끌려가듯 빠르게 비행✈️하게 되는데, 이때 전자가 느끼는 물리적 효과 때문에 주변에 엄청난 세기의 '가짜 자기장 소용돌이'🌪️가 형성돼요. 이를 물리학에서 '스핀-궤도 결합'이라고 해요. 과학자들은 특수한 오스뮴 화합물 결정 구조 속에서 이 강력한 힘💪을 이용해, 미래 양자 컴퓨터의 계산 오류를 원천적으로 지워버릴 수 있는 기묘한 신물질 상태를 연구하고 있답니다🔬.`,
+        animType: 'spinOrbitField', animLabel: '오스뮴의 가상 자기장 효과',
+        gameBtn: `<a href="osgame.html" class="game-btn metal-os" style="color: #ffffff; border: 1px solid #60a5fa;">오스뮴: [게임하러 가기] 🎮</a>`
+      },
+      Ir: {
+        koName: '이리듐', enName: 'Iridium', num: 77, weight: '192.22',
+        shells: [2, 8, 18, 32, 15, 2], latexConfig: '\\mathrm{[Xe] \\, 4f^{14} \\, 5d^7 \\, 6s^2}',
+        conductivity: '21.1 × 10⁶ S/m', coreColor: '#e6e8ea',
+        title: '전기 자극 한 번에 자석 방향을 확 바꾸는 초고속 스위치',
+        desc: `<strong>🎨 우아한 새하얀 빛의 비밀:</strong> 이리듐은 백금(플래티넘)과 견줄 정도로 밝고 깨끗한 '새하얀 광채'✨를 자랑해요. 이리듐의 전자들은 아주 단단하고 촘촘한 격자 구조🧱 속에서 굳건하게 자리를 지키며 외부에서 들어오는 빛을 흩어짐 없이 사방으로 맑게 반사해 내요🪞. 그래서 아무리 높은 열🔥을 받거나 강력한 산성 물질🧪을 부어도 빛이 흐려지지 않고 처음의 새하얗고 고결한 아름다움을 영원히 유지할 수 있답니다.<br><br>과거 공룡🦖을 멸종시킨 운석☄️의 성분으로 유명한 이리듐은 엄청난 고열이나 물리적 충격💥에도 지구상에서 가장 잘 버티는 단단함을 가졌어요. 이리듐은 \\(\\mathrm{Sr_2IrO_4}\\) 같은 특수한 결정 구조가 되면, 전기를 걸어주는 조건에 따라 전기가 전혀 통하지 않는 절연체⛔와 쇠처럼 잘 통하는 금속 상태⚡를 넘나드는 신기한 변신 능력🦸‍♂️을 보여줘요. 특히 반도체 회로에서 이리듐은 아주 훌륭한 스핀 주입 공급원인데, 하부 이리듐 층에 일반 전류를 옆으로 슥 흘려주기만 하면 위층에 있는 자석 메모리를 확 회전시켜 버리는 강력한 토크 회전력🌪️('스핀-궤도 토크')을 만들어냅니다. 이를 이용해 전력을 거의 안 쓰면서 평생 쓰고 지워도 망가지지 않는 최신 반도체💻를 제작합니다.`,
+        animType: 'sotTorque', animLabel: '이리듐의 자성 방향 고속 회전',
+        gameBtn: `<a href="irgame.html" class="game-btn metal-ir" style="color: #1c1917; border: 1px solid #a8a29e;">이리듐: [게임하러 가기] 🎮</a>`
+      },
+      Pt: {
+        koName: '백금', enName: 'Platinum', num: 78, weight: '195.08',
+        shells: [2, 8, 18, 32, 17, 1], latexConfig: '\\mathrm{[Xe] \\, 4f^{14} \\, 5d^9 \\, 6s^1}',
+        conductivity: '9.66 × 10⁶ S/m', coreColor: '#f1f5f9',
+        title: '스핀의 회전 방향에 따라 길을 갈라놓는 친절한 교통경찰',
+        desc: `<strong>🎨 고귀한 순백색 빛의 비밀:</strong> 백금(플래티넘)은 금보다도 귀하게 대접받았던 하얀 귀금속의 대명사👑죠! 물론 지금은 금이 더 비싸졌지만요. 백금은 밀도가 아주 높고 전자들이 빛을 흡수하지 않고 전 영역에서 아주 일정하고 고르게 반사✨하기 때문에, 일반 은보다 한층 더 깊고 묵직한 느낌의 '순백색 빛'🤍을 뿜어내요. 시간이 지나도 변색되지 않고 영원히 하얗게 반짝이는 백금의 아름다움은 바로 이 안정적인 전자 반사 특성에서 나옵니다.<br><br>백금은 아주 귀하고 아름다운 최고급 귀금속💍으로 잘 알려져 있지만, 양자 물성 소자 실험실에서는 엄격한 '교통경찰관'👮‍♂️ 역할을 멋지게 해내요. 백금 판 내부로 일반적인 전류⚡를 흘려보내면, 백금 원자가 가진 강력한 상대론적 효과 때문에 전자가 가진 자석 성질(스핀)의 방향에 따라 가는 길을 칼로 자르듯 명확하게 쪼개놓습니다✂️. 예를 들어 시계 방향으로 도는 전자는 무조건 오른쪽 위↗️로 가라고 지시하고, 반시계 방향으로 도는 전자는 무조건 왼쪽 아래↙️로 직각으로 꺾어서 달리게 만들죠. 이를 '스핀 홀 효과'라고 부르며, 복잡한 외부 자석 장치🧲 없이 순수한 금속판 하나만으로 깨끗하고 순수한 스핀 신호만 분리수거해 유도해내는 핵심 기술🛠️입니다.`,
+        animType: 'spinHall', animLabel: '백금의 스핀 경로 분리 현상',
+        gameBtn: `<a href="ptgame.html" class="game-btn metal-pt" style="color: #111827; border: 1px solid #d1d5db;">백금: [게임하러 가기] 🎮</a>`
+      },
+      Au: {
+        koName: '금', enName: 'Gold', num: 79, weight: '196.97',
+        shells: [2, 8, 18, 32, 18, 1], latexConfig: '\\mathrm{[Xe] \\, 4f^{14} \\, 5d^{10} \\, 6s^1}',
+        conductivity: '41.0 × 10⁶ S/m', coreColor: '#ffd700',
+        title: '전압 스위치 하나로 자석들을 마음대로 조종하는 마법',
+        desc: `<strong>🎨 눈부신 황금빛의 비밀:</strong> 혹시 금이 왜 다른 금속들처럼 은색이 아니라 노란색💛인지 아시나요? 금 원자는 중심의 핵이 아주 무거워서 주변 전자들이 거의 빛의 속도🚀에 가깝게 엄청나게 빨리 달려요. 아인슈타인의 <strong>'특수상대성이론'</strong>👨‍🔬에 따르면, 빛의 속도로 달리는 전자는 몸집(질량)이 더 무거워지고 핵 쪽으로 바짝 끌려가게 됩니다. 이 독특한 양자 역학적 변화 때문에 금은 에너지가 높은 푸른빛🔵을 흡수하고, 남은 노란색과 붉은색 빛🔴을 반사하면서 우리 눈에 그 아름다운 황금빛✨으로 보이게 되는 것이랍니다!<br><br>반짝이는 노란빛의 황금은 시간이 아무리 흘러도 녹슬거나 변하지 않는 완벽한 물리적 안정성🛡️ 덕분에 첨단 정밀 반도체의 미세 회로를 연결하는 도금 단자🔌로 널리 쓰여왔어요. 그런데 이 금을 원자 몇 개 겹 두께로 아주아주 얇게 펴서 표면 경계면을 만들면 나노 양자 현상이 발생해요. 금의 표면에서는 우주의 균형(공간 대칭성)이 강제로 깨지면서💥, 전자가 달릴 때 표면에 수직으로 강한 전기장⚡이 걸리는 효과가 생깁니다. 이를 '라쉬바 효과'라고 불러요. 이 성질을 이용하면 거대하고 무거운 외부 자석🧲을 가까이 대지 않고도, 스마트폰📱 배터리의 가벼운 '전기 전압 스위치'를 켜고 끄는 것만으로🔘 전자의 자석 스핀들을 마음대로 조종하는 꿈의 양자 트랜지스터💻를 만들 수 있습니다.`,
+        animType: 'rashba', animLabel: '금 표면의 라쉬바 스핀 회전',
+        gameBtn: `<a href="augame.html" class="game-btn metal-au" style="color: #451a03; border: 1px solid #fde047;">금: [게임하러 가기] 🎮</a>`
+      }
+    };
+
+    let activeBohrId = null;
+    let activeAppId = null;
+    let sgAnimationId = null;
+    let currentSelectedElement = null;
+
+    // 🔗 URL 수정 부분: 웹에 게시(pub)가 아닌 내보내기(export) 형식으로 변경하여 권한 문제 우회
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1jQiGuH0Q57nGRnsI7NulgMF1SmKQ0QB7JfdJx5Y15t8/export?format=csv&gid=1374893518";
+    
+    // 🛡️ 기본 데이터 완전 파괴 (처음엔 빈 오브젝트로 가동)
+    let sheetRealPrices = {}; 
+    let isLiveConnected = false; 
+
+    // 🌐 연동 동기화 엔진
+    async function fetchSpreadsheetPrices() {
+      try {
+        const response = await fetch(`${GOOGLE_SHEET_CSV_URL}&ts=${Date.now()}`);
+        if (!response.ok) throw new Error("구글 응답 실패");
+        
+        const csvContent = await response.text();
+        parseCSVData(csvContent);
+      } catch (error) {
+        // CORS 우회용 2차 백업 프록시 시도
+        try {
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(GOOGLE_SHEET_CSV_URL + '&ts=' + Date.now())}`;
+          const proxyResponse = await fetch(proxyUrl);
+          if (!proxyResponse.ok) throw new Error("프록시 오류");
+          
+          const proxyData = await proxyResponse.json();
+          parseCSVData(proxyData.contents);
+        } catch (proxyError) {
+          // ❌ 연결 최종 실패 시 상태를 확실히 리셋
+          isLiveConnected = false;
+        }
+      }
+
+      if (currentSelectedElement) {
+        updatePriceUI();
+      }
+    }
+
+    // CSV 분석 모듈
+    function parseCSVData(csvText) {
+      const lines = csvText.split(/\r?\n/);
+      let matchedCount = 0;
+      let tempPrices = {};
+
+      lines.forEach((line, index) => {
+        if (index === 0 || !line.trim()) return;
+        const cols = line.split(",");
+        if (cols.length < 2) return;
+        
+        const code = cols[0].replace(/["']/g, "").trim(); 
+        const rawPrice = cols[1].replace(/["']/g, "").trim();
+        const cleanPrice = parseFloat(rawPrice.replace(/[^0-9.-]/g, ""));
+        
+        if (!isNaN(cleanPrice) && ['Au','Ag','Pt','Pd','Ru','Os','Rh','Ir'].includes(code)) {
+          tempPrices[code] = cleanPrice;
+          matchedCount++;
+        }
+      });
+
+      // 8개 필수 데이터가 전부 들어와야만 최종 성공으로 인정
+      if (matchedCount >= 8) {
+        sheetRealPrices = tempPrices;
+        isLiveConnected = true;
+      } else {
+        isLiveConnected = false;
+      }
+    }
+
+    // ⏱️ 화면 갱신 메커니즘 (가짜 데이터 원천 차단)
+    function updatePriceUI() {
+      if (!currentSelectedElement) return;
+      
+      const priceElement = document.getElementById('pPrice');
+      const gramElement = document.getElementById('pPriceGram');
+
+      // 오직 연동에 성공한 참(True) 상태일 때만 출력
+      if (isLiveConnected && sheetRealPrices[currentSelectedElement]) {
+        const currentPrice = sheetRealPrices[currentSelectedElement];
+        
+        priceElement.innerHTML = 
+          `$ ${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 3})} USD / 온스 (oz) ` +
+          `<span style="color:#22c55e; font-size:0.9rem; margin-left:10px;">● 실시간 동기화 완료</span>`;
+        priceElement.style.color = "#22c55e";
+
+        const pricePerGram = currentPrice / 31.1034768;
+        gramElement.innerHTML = 
+          `$ ${pricePerGram.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} USD / 그램 (g)`;
+        gramElement.style.color = "#60a5fa";
+      } else {
+        // ❌ 연결 안 되면 확실하게 빈칸 및 경고 처리
+        priceElement.innerHTML = `<span style="color:#ef4444;">❌ 실시간 데이터 불러오기 실패 (네트워크 확인 요망)</span>`;
+        gramElement.innerHTML = `<span style="color:#ef4444;">❌ 연동 실패로 계산 불가</span>`;
+      }
+    }
+
+    // 초기 실행 및 8초 반복
+    fetchSpreadsheetPrices();
+    setInterval(fetchSpreadsheetPrices, 8000);
+
+    function selectElement(code) {
+      // [추가] 원소 버튼 클릭 시 경쾌하고 맑은 효과음 출력
+      playClickSound();
+
+      currentSelectedElement = code;
+      const data = elementData[code];
+      
+      document.querySelectorAll('.btn-element').forEach(btn => btn.classList.remove('active'));
+      const targetBtn = Array.from(document.querySelectorAll('.btn-element')).find(btn => btn.textContent.includes(code));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('mainWorkspace').style.display = 'grid';
+
+      document.getElementById('elemHeader').innerText = `${data.koName} (${code}) 양자 물성 분석판`;
+      document.getElementById('pKoName').innerText = data.koName;
+      document.getElementById('pEnName').innerText = data.enName;
+      document.getElementById('pSymbolNum').innerText = `${code} (원자번호 ${data.num}번)`;
+      document.getElementById('pWeight').innerText = `${data.weight} g/mol`;
+      document.getElementById('pConductivity').innerText = data.conductivity;
+      
+      const configDiv = document.getElementById('pConfig');
+      configDiv.innerHTML = `$$${data.latexConfig}$$`;
+      const expDiv = document.getElementById('expDetail');
+      expDiv.innerHTML = data.desc;
+      
+      // [보안 우회 보완] 구글 iframe 보안 제약으로 MathJax 라이브러리가 로드 지연되어도 동작이 멈추지 않도록 예외 처리
+      if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([configDiv, expDiv]).catch(function (err) {
+          console.log("MathJax 연동 지연: ", err.message);
+        });
+      }
+      
+      document.getElementById('expTitle').innerText = data.title;
+      document.getElementById('animLabel').innerText = data.animLabel;
+
+      // [추가] 각 원소 카드 하단 전용 게임하기 링크 마운트
+      document.getElementById('gameLinkArea').innerHTML = data.gameBtn;
+
+      updatePriceUI();
+      startBohrModel(data);
+      startAppAnimation(data.animType, data.coreColor);
+    }
+
+    // [보어 원자 모형 엔진 - 원본 소스코드와 100% 동일]
+    function startBohrModel(data) {
+      if(activeBohrId) cancelAnimationFrame(activeBohrId);
+      const canvas = document.getElementById('bohrCanvas');
+      const ctx = canvas.getContext('2d');
+      const shells = data.shells;
+      let angle = 0;
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+        ctx.fillStyle = data.coreColor;
+        ctx.shadowColor = data.coreColor;
+        ctx.shadowBlur = 25;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 14px "Nanum Gothic", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`No.${data.num}`, cx, cy - 12);
+        ctx.font = 'bold 22px "Nanum Gothic", sans-serif';
+        ctx.fillText(currentSelectedElement, cx, cy + 10);
+
+        shells.forEach((electronCount, index) => {
+          const radius = 65 + (index * 30);
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          for(let i=0; i<electronCount; i++) {
+            const baseAngle = (Math.PI * 2 / electronCount) * i;
+            const speedFactor = (7 - index) * 0.15;
+            const direction = (index % 2 === 0) ? 1 : -1;
+            const currentAngle = baseAngle + (angle * speedFactor * direction);
+
+            const ex = cx + radius * Math.cos(currentAngle);
+            const ey = cy + radius * Math.sin(currentAngle);
+
+            ctx.beginPath();
+            ctx.arc(ex, ey, 5.5, 0, Math.PI * 2);
+            ctx.fillStyle = (data.coreColor === '#ffffff' || data.coreColor === '#e2e8f0') ? '#38bdf8' : data.coreColor;
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        });
+        angle += 0.025;
+        activeBohrId = requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // [양자 현상 실험기 애니메이션 - 원본 소스코드 완벽 복구 및 루테늄 자막 위치 상향 보정]
+    function startAppAnimation(type, color) {
+      if(activeAppId) cancelAnimationFrame(activeAppId);
+      const canvas = document.getElementById('appAnimCanvas');
+      const ctx = canvas.getContext('2d');
+      let frame = 0;
+
+      function draw() {
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        ctx.font = '13px "Nanum Gothic", sans-serif';
+        
+        if (type === 'antiFerro') {
+          ctx.fillStyle = '#ef4444'; ctx.fillText('강자성판 A (위방향 ⬆)', 20, 50);
+          // [조정] Y좌표값을 135에서 115로 올려서 배경 박스(y=125)와 글씨가 겹치는 현상을 해결했습니다.
+          ctx.fillStyle = color; ctx.fillText('루테늄 나노 방어벽 (Ru)', 20, 115);
+          ctx.fillStyle = '#3b82f6'; ctx.fillText('강자성판 B (아래방향 ⬇ 고정)', 20, 220);
+          ctx.lineWidth = 3;
+          let flip = Math.sin(frame * 0.04) > 0 ? 1 : -1;
+          ctx.strokeStyle = '#ef4444';
+          drawArrow(ctx, 160, 70, 160, 70 - 35 * flip);
+          drawArrow(ctx, 240, 70, 240, 70 - 35 * flip);
+          ctx.fillStyle = color;
+          for(let i=0; i<7; i++) ctx.fillRect(110 + i*30, 125, 14, 14);
+          ctx.strokeStyle = '#3b82f6';
+          drawArrow(ctx, 160, 175, 160, 175 + 35 * flip);
+          drawArrow(ctx, 240, 175, 240, 175 + 35 * flip);
+        } else if (type === 'spinPump') {
+          ctx.fillStyle = '#94a3b8'; ctx.fillText('철-로듐 자석 합금 소자', 20, 50);
+          ctx.fillStyle = '#a855f7'; ctx.fillText('전달되는 회전 에너지 (스핀파)', 20, 240);
+          let px = 70, py = 130;
+          let rX = 20, rY = 10;
+          let ang = frame * 0.08;
+          let ax = px + Math.cos(ang) * rX;
+          let ay = py + Math.sin(ang) * rY - 30;
+          ctx.strokeStyle = color; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.ellipse(px, py-30, rX, rY, 0, 0, Math.PI*2); ctx.stroke();
+          ctx.lineWidth = 4; drawArrow(ctx, px, py, ax, ay);
+          ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 3;
+          ctx.beginPath();
+          for(let x = 120; x < 380; x++) {
+            let y = 130 + Math.sin(x * 0.04 - frame * 0.12) * 25;
+            if(x === 120) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        } else if (type === 'perpendicular') {
+          ctx.fillStyle = '#94a3b8'; ctx.fillText('일반 무작위 배열 자석', 20, 40);
+          ctx.fillStyle = '#eab308'; ctx.fillText('Co/Pd 수직 정렬 안정화', 20, 240);
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#64748b';
+          let wiggle = Math.sin(frame * 0.05) * 10;
+          drawArrow(ctx, 40, 140, 80 + wiggle, 140 + wiggle);
+          drawArrow(ctx, 70, 90, 95 - wiggle, 110 + wiggle);
+          ctx.strokeStyle = '#eab308';
+          ctx.lineWidth = 4;
+          for(let i=0; i<4; i++) {
+            let state = (i % 2 === 0) ? 1 : -1;
+            let pulse = Math.sin(frame * 0.1 + i) * 5;
+            drawArrow(ctx, 180 + i*50, 150, 180 + i*50, 150 - (50 + pulse) * state);
+          }
+        } else if (type === 'spinToCharge') {
+          ctx.fillStyle = '#38bdf8'; ctx.fillText('🌀 입력된 스핀 회전 흐름', 20, 40);
+          ctx.fillStyle = '#ffffff'; ctx.fillText('⚡ 전기 신호로 번역되어 탈출', 180, 240);
+          ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(80, 130, 25, 0, Math.PI*2); ctx.stroke();
+          let sa = frame * 0.1;
+          drawArrow(ctx, 80, 130, 80 + Math.cos(sa)*25, 130 + Math.sin(sa)*25);
+          ctx.fillStyle = color; ctx.fillRect(140, 70, 15, 120);
+          ctx.fillStyle = '#eab308';
+          let pulseX = 160 + (frame * 3.5) % 220;
+          ctx.beginPath(); ctx.arc(pulseX, 130, 8, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#eab308'; ctx.lineWidth = 2;
+          drawArrow(ctx, 160, 130, 370, 130);
+        } else if (type === 'spinOrbitField') {
+          ctx.fillStyle = '#ef4444'; ctx.fillText('💥 초고중량 핵인력', 20, 40);
+          ctx.fillStyle = color; ctx.fillText('⚡ 주행이 만든 가상 자기장', 150, 250);
+          let cx = 100, cy = 140;
+          ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI*2);
+          ctx.fillStyle = '#ef4444'; ctx.fill();
+          let orbitRadius = 60;
+          let ex = cx + Math.cos(frame * 0.2) * orbitRadius;
+          let ey = cy + Math.sin(frame * 0.2) * orbitRadius * 0.4;
+          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, 6, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(260, 140, (frame*1.5)%80 + 10, 0, Math.PI*2); ctx.stroke();
+        } else if (type === 'sotTorque') {
+          ctx.fillStyle = '#3b82f6'; ctx.fillText('⬅️ 이리듐 층에 전류 투입', 20, 210);
+          ctx.fillStyle = '#ef4444'; ctx.fillText('🧲 회전력으로 자성 스위칭', 20, 40);
+          ctx.fillStyle = color; ctx.fillRect(60, 140, 280, 25);
+          ctx.fillStyle = '#3b82f6';
+          ctx.fillRect(320 - (frame*2.5)%240, 148, 8, 8);
+          let theta = Math.PI/2 + Math.sin(frame * 0.03) * (Math.PI/2);
+          ctx.lineWidth = 6; ctx.strokeStyle = '#ef4444';
+          drawArrow(ctx, 200, 120, 200 + Math.cos(theta)*50, 120 - Math.sin(theta)*50);
+        } else if (type === 'spinHall') {
+          ctx.fillStyle = '#fff'; ctx.fillText('혼합 전류 입력 ➡', 15, 135);
+          ctx.fillStyle = '#ef4444'; ctx.fillText('⬆ 시계방향 전자 우회전', 230, 40);
+          ctx.fillStyle = '#3b82f6'; ctx.fillText('⬇ 반시계방향 전자 좌회전', 230, 250);
+          
+          ctx.fillStyle = 'rgba(241,245,249,0.15)'; ctx.fillRect(170, 80, 100, 110);
+          ctx.strokeStyle = color; ctx.strokeRect(170, 80, 100, 110);
+          
+          let pX = 40 + (frame * 2) % 280;
+          if (pX < 170) {
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pX, 135, 5, 0, Math.PI*2); ctx.fill();
+          } else if (pX >= 170 && pX <= 270) {
+            let offset = (pX - 170);
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(pX, 135 - offset * 0.55, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(pX, 135 + offset * 0.55, 5, 0, Math.PI*2); ctx.fill();
+          } else {
+            let finalOffset = 100 * 0.55;
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(pX, 135 - finalOffset, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(pX, 135 + finalOffset, 5, 0, Math.PI*2); ctx.fill();
+          }
+        } else if (type === 'rashba') {
+          ctx.fillStyle = '#eab308'; ctx.fillText('⤧ 표면 수직 전기장 생성', 20, 40);
+          ctx.fillStyle = color; ctx.fillText('우주행 ➡ 자석 Up 고정', 40, 105);
+          ctx.fillStyle = color; ctx.fillText('좌주행 ⬅ 자석 Down 고정', 40, 185);
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#22c55e';
+          let rx = 80 + (frame*2.5)%260;
+          drawArrow(ctx, rx, 120, rx + 25, 120); 
+          ctx.strokeStyle = '#ef4444';
+          drawArrow(ctx, rx, 120, rx, 95);  
+          ctx.strokeStyle = '#22c55e';
+          let lx = 340 - (frame*2.5)%260;
+          drawArrow(ctx, lx, 200, lx - 25, 200); 
+          ctx.strokeStyle = '#3b82f6';
+          drawArrow(ctx, lx, 200, lx, 225);  
+        }
+
+        frame++;
+        activeAppId = requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // [화살표 드로잉 툴 - 완벽 복구]
+    function drawArrow(ctx, fromx, fromy, tox, toy) {
+      let headlen = 10;
+      let dx = tox - fromx;
+      let dy = toy - fromy;
+      let angle = Math.atan2(dy, dx);
+      ctx.beginPath();
+      ctx.moveTo(fromx, fromy);
+      ctx.lineTo(tox, toy);
+      ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.moveTo(tox, toy);
+      ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.stroke();
+    }
+
+    // [슈테른-게를라흐 물성 탐구 애니메이션 루프 - 완벽 복구]
+    function runSternGerlachSimulation() {
+      const canvas = document.getElementById('sgCanvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let frame = 0;
+      const atoms = [];
+
+      function animate() {
+        ctx.fillStyle = '#05070a'; ctx.fillRect(0,0, canvas.width, canvas.height);
+        ctx.font = '13px "Nanum Gothic", sans-serif';
+
+        ctx.fillStyle = '#334155'; ctx.fillRect(15, 90, 60, 45);
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(65, 107, 10, 10);
+        ctx.fillStyle = '#fff'; ctx.fillText('Ag 가열 화로', 15, 80);
+
+        ctx.fillStyle = '#1e293b'; 
+        ctx.fillRect(240, 25, 140, 45); 
+        ctx.fillRect(240, 150, 140, 45); 
+        ctx.fillStyle = '#3b82f6'; ctx.fillText('N극 자석 (뾰족함)', 250, 50);
+        ctx.fillStyle = '#ef4444'; ctx.fillText('S극 자석 (평평함)', 250, 165);
+
+        ctx.fillStyle = '#475569'; ctx.fillRect(640, 25, 18, 170);
+        ctx.fillStyle = '#c084fc';
+        ctx.fillRect(640, 50, 18, 8);
+        ctx.fillRect(640, 160, 18, 8);
+        ctx.fillText('검출 스크린', 650, 115);
+
+        if(frame % 12 === 0) {
+          atoms.push({ x: 75, y: 112, spin: Math.random() > 0.5 ? 1 : -1 });
+        }
+
+        for(let i = atoms.length - 1; i >= 0; i--) {
+          let a = atoms[i];
+          a.x += 3.5;
+
+          if(a.x >= 240 && a.x <= 380) {
+            a.y += a.spin * 1.5; 
+          } else if(a.x > 380 && a.x < 640) {
+            a.y += a.spin * 0.8;
+          }
+
+          ctx.beginPath(); ctx.arc(a.x, a.y, 5, 0, Math.PI*2);
+          ctx.fillStyle = a.spin === 1 ? '#22c55e' : '#ec4899';
+          ctx.fill();
+
+          if(a.x >= 640) atoms.splice(i, 1);
+        }
+
+        frame++;
+        sgAnimationId = requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function openSpinModal() {
+      // 모달 오픈 시 클릭 효과음 출력
+      playClickSound();
+      document.getElementById('spinModal').style.display = 'flex';
+      setTimeout(runSternGerlachSimulation, 100);
+    }
+    function closeSpinModal() {
+      document.getElementById('spinModal').style.display = 'none';
+      if(sgAnimationId) cancelAnimationFrame(sgAnimationId);
+    }
+    function openUnitModal() {
+      playClickSound();
+      document.getElementById('unitModal').style.display = 'flex';
+    }
+    function closeUnitModal() {
+      document.getElementById('unitModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
