@@ -103,7 +103,7 @@
     /* 보너스 & 페널티 이벤트 텍스트 팝업 */
     .event-text {
       position: absolute; top: 100%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-      font-family: 'Black Han Sans', sans-serif; font-size: 3rem; white-space: nowrap;
+      font-family: 'Black Han Sans', sans-serif; font-size: 3rem; text-align: center; width: 100%;
       opacity: 0; pointer-events: none; z-index: 20; text-shadow: 0 0 15px rgba(0,0,0,0.9);
       transition: all 0.1s;
     }
@@ -133,6 +133,8 @@
       border: 4px solid var(--border-color); background: var(--card-bg); color: white; cursor: pointer;
       box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.1);
       transition: all 0.1s; display: flex; justify-content: center; align-items: center;
+      touch-action: none; /* 다중 터치 씹힘 현상 완벽 방지 */
+      -webkit-user-select: none; user-select: none;
     }
     .btn-magnet:active { transform: translateY(8px) scale(0.95); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
     .p1-zone .btn-magnet { border-color: rgba(239, 68, 68, 0.5); }
@@ -214,8 +216,8 @@
         <div class="magnet-arrow" id="arrow1">⬆️</div>
       </div>
       <div class="control-area">
-        <button class="btn-magnet" onclick="checkAnswer(1, 'UP')">⬆️</button>
-        <button class="btn-magnet" onclick="checkAnswer(1, 'DOWN')">⬇️</button>
+        <button class="btn-magnet" onpointerdown="handleInput(event, 1, 'UP')">⬆️</button>
+        <button class="btn-magnet" onpointerdown="handleInput(event, 1, 'DOWN')">⬇️</button>
       </div>
     </div>
 
@@ -236,8 +238,8 @@
         <div class="magnet-arrow" id="arrow2">⬇️</div>
       </div>
       <div class="control-area">
-        <button class="btn-magnet" onclick="checkAnswer(2, 'UP')">⬆️</button>
-        <button class="btn-magnet" onclick="checkAnswer(2, 'DOWN')">⬇️</button>
+        <button class="btn-magnet" onpointerdown="handleInput(event, 2, 'UP')">⬆️</button>
+        <button class="btn-magnet" onpointerdown="handleInput(event, 2, 'DOWN')">⬇️</button>
       </div>
     </div>
 
@@ -282,11 +284,12 @@
     // 💡 선생님을 위한 게임 밸런스 설정 (원하시는 대로 수정하세요)
     // ======================================================
     const GAME_CONFIG = {
-      SCORE_CORRECT: 10,   // 기본 정답 점수
-      SCORE_BONUS: 70,     // 5연속 정답(콤보) 달성 시 추가 보너스 점수
-      PENALTY_BASE: 10,    // 기본 오답 감점 (연속 오답 시 x2, x3 배로 눈덩이처럼 불어남)
-      FEVER_MULTIPLIER: 2, // 피버타임(15초 전) 발동 시 점수/감점 증폭 배수
-      STUN_DURATION: 800   // 오답 시 꼼수 방지용 버튼 마비 시간 (1000 = 1초)
+      SCORE_CORRECT: 10,     // 기본 정답 점수
+      SCORE_BONUS_BASE: 30,  // 5연속 정답 시 기본 보너스 (10연속=60, 15연속=90... 기하급수적 증가)
+      PENALTY_BASE: 5,      // 기본 오답 감점 (연속 오답 시 x2, x3 배로 눈덩이처럼 불어남)
+      PENALTY_MILESTONE: 50, // 총 누적 오답 5회마다 추가되는 징벌 감점 (10회=100, 15회=150...)
+      FEVER_MULTIPLIER: 2,   // 피버타임(15초 전) 발동 시 점수/감점 증폭 배수
+      STUN_DURATION: 800     // 오답 시 꼼수 방지용 버튼 마비 시간 (1000 = 1초)
     };
     // ======================================================
 
@@ -359,9 +362,10 @@
     // --- 🎮 게임 코어 로직 ---
     let time = 60; let timerId = null; let isPlaying = false; let isFeverTime = false; let isWarningTime = false;
     
+    // totalWrong 속성이 추가되었습니다.
     const pData = {
-      1: { score: 0, combo: 0, wrongCombo: 0, isStunned: false, currentTarget: '', zoneObj: document.getElementById('zone1'), arrowObj: document.getElementById('arrow1'), scoreObj: document.getElementById('score1'), comboObj: document.getElementById('combo1'), eventObj: document.getElementById('event1') },
-      2: { score: 0, combo: 0, wrongCombo: 0, isStunned: false, currentTarget: '', zoneObj: document.getElementById('zone2'), arrowObj: document.getElementById('arrow2'), scoreObj: document.getElementById('score2'), comboObj: document.getElementById('combo2'), eventObj: document.getElementById('event2') }
+      1: { score: 0, combo: 0, wrongCombo: 0, totalWrong: 0, isStunned: false, currentTarget: '', zoneObj: document.getElementById('zone1'), arrowObj: document.getElementById('arrow1'), scoreObj: document.getElementById('score1'), comboObj: document.getElementById('combo1'), eventObj: document.getElementById('event1') },
+      2: { score: 0, combo: 0, wrongCombo: 0, totalWrong: 0, isStunned: false, currentTarget: '', zoneObj: document.getElementById('zone2'), arrowObj: document.getElementById('arrow2'), scoreObj: document.getElementById('score2'), comboObj: document.getElementById('combo2'), eventObj: document.getElementById('event2') }
     };
 
     function startGame() {
@@ -394,9 +398,15 @@
       }, 50);
     }
 
+    // 💡 태블릿 동시 터치 씹힘 방지용 독립 입력 핸들러
+    function handleInput(e, p, dir) {
+      e.preventDefault(); // 브라우저 기본 터치 제스처 무시
+      checkAnswer(p, dir);
+    }
+
     function showEventText(p, text, type) {
       const evObj = pData[p].eventObj;
-      evObj.innerText = text;
+      evObj.innerHTML = text.replace(/\n/g, '<br>'); // 두 줄 텍스트 표시 지원
       evObj.className = `event-text ${type}`;
       void evObj.offsetWidth; // 리플로우 강제 트리거
       evObj.classList.add('active');
@@ -419,12 +429,13 @@
         let earnedPts = GAME_CONFIG.SCORE_CORRECT * multiplier;
         pData[p].score += earnedPts;
 
-        // 💡 5연속 정답 보너스 시스템
+        // 💡 10, 15, 20... 연속 정답 스케일링 보너스 시스템
         if (pData[p].combo > 0 && pData[p].combo % 5 === 0) {
-          let bonusPts = GAME_CONFIG.SCORE_BONUS * multiplier;
+          let bonusTier = pData[p].combo / 5; // 5연속=1, 10연속=2, 15연속=3...
+          let bonusPts = GAME_CONFIG.SCORE_BONUS_BASE * bonusTier * multiplier;
           pData[p].score += bonusPts;
           AudioEngine.sfx.bonus();
-          showEventText(p, `BONUS! +${bonusPts}`, 'bonus');
+          showEventText(p, `${pData[p].combo} COMBO!\n+${bonusPts}`, 'bonus');
         }
 
         pData[p].scoreObj.innerText = pData[p].score;
@@ -448,16 +459,25 @@
         // --- ❌ 오답 처리 (꼼수 완벽 철퇴) ---
         AudioEngine.sfx.wrong();
         pData[p].combo = 0;
-        pData[p].wrongCombo++; // 오답 스택 누적
+        pData[p].wrongCombo++; // 연속 오답 누적
+        pData[p].totalWrong++; // 💡 총 오답 횟수 누적
         pData[p].comboObj.classList.remove('active');
         
-        // 💡 오답 누적 가중 처벌 (틀릴수록 깎이는 점수가 배가 됨)
-        // 꼼수를 써서 연타하면 이 기하급수적 감점 때문에 점수가 마이너스로 뚫고 내려갑니다.
-        const penalty = GAME_CONFIG.PENALTY_BASE * pData[p].wrongCombo * multiplier;
+        // 💡 오답 누적 가중 처벌
+        let penalty = GAME_CONFIG.PENALTY_BASE * pData[p].wrongCombo * multiplier;
+
+        // 💡 총 오답 5, 10, 15... 회 달성 시 징벌적 추가 감점 폭탄
+        if (pData[p].totalWrong > 0 && pData[p].totalWrong % 5 === 0) {
+          let penaltyTier = pData[p].totalWrong / 5;
+          let extraPenalty = GAME_CONFIG.PENALTY_MILESTONE * penaltyTier * multiplier;
+          penalty += extraPenalty; 
+          showEventText(p, `총 오답 ${pData[p].totalWrong}회!\n징벌 감점 -${penalty}`, 'penalty');
+        } else {
+          showEventText(p, `PENALTY! -${penalty}`, 'penalty');
+        }
+        
         pData[p].score -= penalty; // 마이너스 점수 허용 (기대값을 확실히 음수로 만듦)
         pData[p].scoreObj.innerText = pData[p].score;
-
-        showEventText(p, `PENALTY! -${penalty}`, 'penalty');
 
         pData[p].zoneObj.classList.add('wrong-flash', 'shake-effect');
         setTimeout(() => pData[p].zoneObj.classList.remove('wrong-flash', 'shake-effect'), 300);
