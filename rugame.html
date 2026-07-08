@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>루테늄(Ru) 스냅! 반강자성 배틀</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Black+Han+Sans&display=swap">
+  <style>
+    :root {
+      --bg-color: #0b0d12;
+      --card-bg: #131722;
+      --gold: #d4af37;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+      --ru-color-1: #475569;
+      --ru-color-2: #94a3b8;
+      --p1-color: #ef4444; /* Red */
+      --p2-color: #3b82f6; /* Blue */
+    }
+
+    * { box-sizing: border-box; touch-action: manipulation; }
+
+    body {
+      margin: 0;
+      font-family: 'Nanum Gothic', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow: hidden; 
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* 🌌 배경 스핀 캔버스 (noblemetals.html 테마 반영) */
+    #bgCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1; /* 가장 아래 레이어 */
+    }
+
+    /* 상단 헤더 */
+    header {
+      background: linear-gradient(180deg, #161b26 0%, #0b0d12 100%);
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 2px solid var(--ru-color-2);
+      box-shadow: 0 5px 20px rgba(148, 163, 184, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      position: relative;
+    }
+
+    .btn-back {
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid var(--text-muted);
+      padding: 8px 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { background: var(--text-muted); color: #000; }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      text-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
+    }
+    
+    .timer-box {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 2rem;
+      color: var(--gold);
+      background: #000;
+      padding: 5px 20px;
+      border-radius: 15px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    }
+    .timer-box.fever {
+      color: #ef4444;
+      border-color: #ef4444;
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    /* 메인 게임 영역 */
+    .game-board {
+      flex: 1;
+      display: flex;
+      position: relative;
+      z-index: 2; /* 캔버스 위에 위치 */
+    }
+
+    /* 중앙 루테늄 방어벽 */
+    .center-wall {
+      width: 40px;
+      background: linear-gradient(180deg, var(--ru-color-1) 0%, var(--ru-color-2) 50%, var(--ru-color-1) 100%);
+      border-left: 2px solid #cbd5e1;
+      border-right: 2px solid #cbd5e1;
+      box-shadow: 0 0 20px rgba(148, 163, 184, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 5;
+    }
+    .center-wall span {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: #0b0d12;
+      letter-spacing: 15px;
+      text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+    }
+
+    /* 플레이어 진영 - 배경 스핀 입자가 비치도록 투명도 설정 */
+    .player-zone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      position: relative;
+    }
+    .p1-zone { background: radial-gradient(circle at left bottom, rgba(239, 68, 68, 0.12) 0%, rgba(11, 13, 18, 0.85) 70%); }
+    .p2-zone { background: radial-gradient(circle at right bottom, rgba(59, 130, 246, 0.12) 0%, rgba(11, 13, 18, 0.85) 70%); }
+
+    /* 점수판 */
+    .score-board {
+      text-align: center;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 4rem;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+    }
+    .p1-zone .score-board { color: var(--p1-color); }
+    .p2-zone .score-board { color: var(--p2-color); }
+    .combo-text { font-size: 1.5rem; color: #fbbf24; opacity: 0; transition: opacity 0.2s; }
+    .combo-text.active { opacity: 1; animation: pop 0.3s ease-out; }
+
+    /* 문제 출제 영역 */
+    .problem-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px; /* 3D 플립 애니메이션용 원근감 */
+    }
+    .problem-label {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 15px;
+      border-radius: 20px;
+    }
+    .magnet-arrow {
+      font-size: 8rem;
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+      /* 3D 회전 애니메이션 효과 정의 */
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+    }
+    .p1-zone .magnet-arrow { color: #fca5a5; }
+    .p2-zone .magnet-arrow { color: #93c5fd; }
+
+    /* 조작 버튼 영역 */
+    .control-area {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      padding-bottom: 20px;
+    }
+    .btn-magnet {
+      flex: 1;
+      max-width: 180px;
+      height: 140px;
+      border-radius: 20px;
+      font-size: 5rem;
+      border: 4px solid var(--border-color);
+      background: var(--card-bg);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.1);
+      transition: transform 0.05s, background 0.1s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .btn-magnet:active {
+      transform: translateY(8px) scale(0.95);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .p1-zone .btn-magnet { border-color: rgba(239, 68, 68, 0.5); }
+    .p2-zone .btn-magnet { border-color: rgba(59, 130, 246, 0.5); }
+
+    /* 경고 연출 (5초 전 데스카운트) */
+    .warning-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .warning-overlay.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: alert-blink 0.5s infinite alternate;
+    }
+    .warning-text {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 8rem;
+      color: #ef4444;
+      text-shadow: 0 0 30px #000, 0 0 10px #ef4444;
+      animation: alert-zoom 1s infinite;
+    }
+
+    @keyframes alert-blink {
+      0% { box-shadow: inset 0 0 0px rgba(239, 68, 68, 0); }
+      100% { box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.6); }
+    }
+    @keyframes alert-zoom {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    /* 모달 (시작화면, 종료화면) */
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      /* 첫 페이지 배경 입자가 잘 보이도록 반투명도 조절 */
+      background: radial-gradient(circle, rgba(11,13,18,0.7) 0%, rgba(11,13,18,0.95) 100%);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-box {
+      background: var(--card-bg);
+      border: 3px solid var(--ru-color-2);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      max-width: 600px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      z-index: 101; /* 캔버스 입자 위로 올라오도록 명시 */
+    }
+    .modal-box h2 { color: var(--text-main); font-size: 2rem; margin-top: 0; }
+    .modal-box p { color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; }
+    
+    .btn-start {
+      background: linear-gradient(135deg, var(--ru-color-1) 0%, var(--ru-color-2) 100%);
+      color: #000;
+      font-weight: 900;
+      font-size: 1.5rem;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 5px 15px rgba(148, 163, 184, 0.4);
+      transition: transform 0.2s;
+    }
+    .btn-start:hover { transform: scale(1.05); }
+
+    /* 제작자 푸터 */
+    footer {
+      text-align: center;
+      padding: 10px;
+      background: #0b0d12;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: bold;
+      border-top: 1px solid var(--border-color);
+      z-index: 10;
+      position: relative;
+    }
+
+    /* 애니메이션 클래스 */
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+    .shake-effect { animation: shake 0.3s; }
+    
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .correct-flash-p1 { background: rgba(34, 197, 94, 0.3) !important; }
+    .correct-flash-p2 { background: rgba(34, 197, 94, 0.3) !important; }
+    .wrong-flash { background: rgba(239, 68, 68, 0.4) !important; }
+  </style>
+</head>
+<body>
+
+  <!-- 🌌 은은한 양자 스핀 배경용 캔버스 (첫 페이지 및 인게임 전체 적용) -->
+  <canvas id="bgCanvas"></canvas>
+
+  <header>
+    <!-- ✅ 요청하신 noblemetals.html로 복귀 링크 완벽 적용 -->
+    <a href="noblemetals.html" class="btn-back">⬅ 연구실 복귀</a>
+    <h1>🧪 루테늄(Ru) 스냅! 반강자성 배틀</h1>
+    <div class="timer-box" id="timerDisplay">60</div>
+  </header>
+
+  <div class="game-board" id="gameBoard">
+    <!-- 1P 진영 -->
+    <div class="player-zone p1-zone" id="zone1">
+      <div class="score-board">
+        1P: <span id="score1">0</span>
+        <div class="combo-text" id="combo1">2 COMBO!</div>
+      </div>
+      <div class="problem-area">
+        <div class="problem-label">강자성판 A (공격)</div>
+        <div class="magnet-arrow" id="arrow1">⬆️</div>
+      </div>
+      <div class="control-area">
+        <button class="btn-magnet" onclick="checkAnswer(1, 'UP')">⬆️</button>
+        <button class="btn-magnet" onclick="checkAnswer(1, 'DOWN')">⬇️</button>
+      </div>
+    </div>
+
+    <!-- 중앙 방어벽 -->
+    <div class="center-wall" id="centerWall">
+      <span>RUTHENIUM</span>
+    </div>
+
+    <!-- 2P 진영 -->
+    <div class="player-zone p2-zone" id="zone2">
+      <div class="score-board">
+        2P: <span id="score2">0</span>
+        <div class="combo-text" id="combo2">2 COMBO!</div>
+      </div>
+      <div class="problem-area">
+        <div class="problem-label">강자성판 A (공격)</div>
+        <div class="magnet-arrow" id="arrow2">⬇️</div>
+      </div>
+      <div class="control-area">
+        <button class="btn-magnet" onclick="checkAnswer(2, 'UP')">⬆️</button>
+        <button class="btn-magnet" onclick="checkAnswer(2, 'DOWN')">⬇️</button>
+      </div>
+    </div>
+
+    <!-- 🚨 5초 전 초긴장 경고 오버레이 -->
+    <div class="warning-overlay" id="warningOverlay">
+      <div class="warning-text">WARNING!</div>
+    </div>
+
+    <!-- 시작 모달 (첫 페이지 느낌 강화) -->
+    <div class="modal-overlay" id="startModal">
+      <div class="modal-box">
+        <h2>🎮 청기 백기 반강자성 배틀</h2>
+        <p>
+          화면 중앙의 화살표는 강력한 자석의 공격 방향입니다.<br>
+          루테늄 방어벽을 활성화하려면, <strong>공격 방향과 '정반대'가 되는 화살표 버튼</strong>을 빠르게 터치하세요!<br><br>
+          💡 <em>위(⬆️)가 나오면 아래(⬇️)를, 아래(⬇️)가 나오면 위(⬆️)를 누르세요.</em><br>
+          종료 15초 전부터 <strong>'피버 타임(점수 2배 / 오답 감점 2배)'</strong>이 발동됩니다!
+        </p>
+        <button class="btn-start" onclick="startGame()">게임 시작 (START)</button>
+      </div>
+    </div>
+
+    <!-- 종료 모달 -->
+    <div class="modal-overlay" id="endModal" style="display: none;">
+      <div class="modal-box">
+        <h2>🏁 타임 오버!</h2>
+        <h1 id="winnerText" style="font-size: 3rem; color: var(--gold); margin: 20px 0;">1P 승리!</h1>
+        <p id="finalScoreText" style="font-size: 1.2rem;"></p>
+        <button class="btn-start" onclick="location.reload()">다시 한 판 하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 하단 제작자 표기 적용 -->
+  <footer>
+    제작자: 해누리중학교 과학교사 남국현
+  </footer>
+
+  <script>
+    // --- 🌌 은은한 스핀 쏟아지는 배경 (상시 비 내리는 우아한 효과) ---
+    const bgCanvas = document.getElementById('bgCanvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class SpinParticle {
+      constructor() {
+        this.x = Math.random() * bgCanvas.width;
+        // 첫 화면부터 비가 내리고 있도록 화면 전체 높이에 무작위 배치
+        this.y = Math.random() * bgCanvas.height;
+        this.initProps();
+      }
+      
+      reset() {
+        this.x = Math.random() * bgCanvas.width;
+        // 바닥에 닿은 입자가 위에서 다시 나타날 때 자연스럽게 흩어지도록 마이너스 난수 부여
+        this.y = -20 - (Math.random() * 150); 
+        this.initProps();
+      }
+
+      initProps() {
+        this.size = Math.random() * 12 + 10;
+        // 우아하게 비 내리는 속도 (1.0 ~ 2.5 사이로 기존보다 살짝 속도감 부여)
+        this.speed = Math.random() * 1.5 + 1.0;
+        this.spinType = Math.random() > 0.5 ? 'UP' : 'DOWN';
+        
+        // 💡 밝기 (0.6) 설정 유지
+        this.color = this.spinType === 'UP' ? 'rgba(34, 197, 94, 0.6)' : 'rgba(236, 72, 153, 0.6)';
+        this.symbol = this.spinType === 'UP' ? '↑' : '↓';
+      }
+
+      update() {
+        this.y += this.speed;
+        this.x += Math.sin(this.y / 50) * 0.4; // 부드러운 바람에 흩날리는 듯한 유선형 움직임
+
+        // 화면 맨 아래로 완전히 사라지면 위에서 다시 생성
+        if (this.y > bgCanvas.height + 30) {
+          this.reset();
+        }
+      }
+
+      draw() {
+        bgCtx.font = `bold ${this.size}px 'Nanum Gothic'`;
+        bgCtx.fillStyle = this.color;
+        bgCtx.textAlign = 'center';
+        
+        // 네온 글로우 효과
+        bgCtx.shadowBlur = 10; 
+        bgCtx.shadowColor = this.color;
+        bgCtx.fillText(this.symbol, this.x, this.y);
+        bgCtx.shadowBlur = 0; // 리셋
+      }
+    }
+
+    // 입자 개수를 50개에서 120개로 대폭 늘려 풍성한 비(Rain) 효과 연출
+    for (let i = 0; i < 120; i++) {
+      particles.push(new SpinParticle());
+    }
+
+    // 게임 틱과 무관하게 상시 구동되는 애니메이션 루프
+    function animateParticles() {
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      particles.forEach(p => { 
+        p.update(); 
+        p.draw(); 
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+
+    // --- 🎵 오디오 엔진 ---
+    const AudioEngine = (function() {
+      let ctx = null;
+      let bgmInterval = null;
+      let isFever = false;
+
+      function init() {
+        if(!ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          ctx = new AudioContext();
+        }
+        if(ctx.state === 'suspended') ctx.resume();
+      }
+
+      function playTone(freq, type, duration, vol=0.5) {
+        if(!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(vol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      }
+
+      const sfx = {
+        correct: () => { playTone(880, 'sine', 0.1, 0.3); setTimeout(() => playTone(1760, 'triangle', 0.15, 0.3), 50); },
+        wrong: () => { playTone(150, 'sawtooth', 0.3, 0.5); },
+        start: () => { playTone(440, 'square', 0.1); setTimeout(() => playTone(554, 'square', 0.1), 100); setTimeout(() => playTone(659, 'square', 0.3), 200); },
+        end: () => { playTone(440, 'triangle', 0.2); setTimeout(() => playTone(440, 'triangle', 0.2), 200); setTimeout(() => playTone(659, 'triangle', 0.6), 400); }
+      };
+
+      function startBGM() {
+        if(bgmInterval) clearInterval(bgmInterval);
+        const notes = [220, 261, 329, 261];
+        let step = 0;
+        bgmInterval = setInterval(() => {
+          if(ctx) playTone(notes[step % notes.length], 'square', 0.1, 0.08);
+          step++;
+        }, 250);
+      }
+
+      function setFeverBGM() {
+        if(bgmInterval) clearInterval(bgmInterval);
+        const notes = [329, 392, 493, 392];
+        let step = 0;
+        bgmInterval = setInterval(() => {
+          if(ctx) playTone(notes[step % notes.length], 'square', 0.1, 0.12);
+          step++;
+        }, 150);
+      }
+      
+      function setWarningBGM() {
+        if(bgmInterval) clearInterval(bgmInterval);
+        const notes = [493, 523];
+        let step = 0;
+        bgmInterval = setInterval(() => {
+          if(ctx) playTone(notes[step % notes.length], 'square', 0.1, 0.18);
+          step++;
+        }, 100);
+      }
+
+      function stopBGM() {
+        if(bgmInterval) clearInterval(bgmInterval);
+      }
+
+      return { init, sfx, startBGM, setFeverBGM, setWarningBGM, stopBGM };
+    })();
+
+    // --- 🎮 게임 코어 로직 ---
+    let time = 60;
+    let timerId = null;
+    let isPlaying = false;
+    let isFeverTime = false;
+    let isWarningTime = false;
+    
+    const pData = {
+      1: { score: 0, combo: 0, currentTarget: '', zoneObj: document.getElementById('zone1'), arrowObj: document.getElementById('arrow1'), scoreObj: document.getElementById('score1'), comboObj: document.getElementById('combo1') },
+      2: { score: 0, combo: 0, currentTarget: '', zoneObj: document.getElementById('zone2'), arrowObj: document.getElementById('arrow2'), scoreObj: document.getElementById('score2'), comboObj: document.getElementById('combo2') }
+    };
+
+    function startGame() {
+      AudioEngine.init();
+      AudioEngine.sfx.start();
+      AudioEngine.startBGM();
+
+      document.getElementById('startModal').style.display = 'none';
+      isPlaying = true;
+      time = 60;
+      
+      generateProblem(1);
+      generateProblem(2);
+
+      timerId = setInterval(() => {
+        time--;
+        document.getElementById('timerDisplay').innerText = time;
+
+        // 피버타임 진입 (15초 전)
+        if (time === 15 && !isFeverTime) {
+          isFeverTime = true;
+          document.getElementById('timerDisplay').classList.add('fever');
+          document.getElementById('centerWall').style.boxShadow = '0 0 30px #ef4444';
+          AudioEngine.setFeverBGM();
+        }
+
+        // 데스 카운트다운 진입 (5초 전) - 사이렌 및 깜빡임
+        if (time === 5 && !isWarningTime) {
+          isWarningTime = true;
+          document.getElementById('warningOverlay').classList.add('active');
+          AudioEngine.setWarningBGM();
+        }
+
+        // 게임 종료
+        if (time <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    // 💡 새로운 문제를 내는 함수 (플립 애니메이션으로 확실한 교체 인지 유도)
+    function generateProblem(p) {
+      const isUp = Math.random() > 0.5;
+      pData[p].currentTarget = isUp ? 'UP' : 'DOWN';
+      const arrowObj = pData[p].arrowObj;
+      
+      // 즉시 안보이게 플립 처리
+      arrowObj.style.transition = 'none';
+      arrowObj.style.transform = 'scale(0.2) rotateY(90deg)';
+      arrowObj.style.opacity = '0';
+      
+      // 아주 짧은 딜레이 후 새로운 화살표와 함께 휙! 하고 등장
+      setTimeout(() => {
+        arrowObj.innerText = isUp ? '⬆️' : '⬇️';
+        arrowObj.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s';
+        arrowObj.style.transform = 'scale(1) rotateY(0deg)';
+        arrowObj.style.opacity = '1';
+      }, 50);
+    }
+
+    function checkAnswer(p, inputDir) {
+      if (!isPlaying) return;
+
+      const targetDir = pData[p].currentTarget;
+      // 정답 조건: 출제된 방향과 "반대" 방향 (반강자성 결합 규칙)
+      const isCorrect = (targetDir === 'UP' && inputDir === 'DOWN') || (targetDir === 'DOWN' && inputDir === 'UP');
+
+      if (isCorrect) {
+        // 정답 처리
+        AudioEngine.sfx.correct();
+        const pts = isFeverTime ? 20 : 10;
+        pData[p].score += pts;
+        pData[p].combo++;
+        
+        pData[p].scoreObj.innerText = pData[p].score;
+        
+        // 콤보 표시
+        if(pData[p].combo > 1) {
+          pData[p].comboObj.innerText = `${pData[p].combo} COMBO!`;
+          pData[p].comboObj.classList.remove('active');
+          void pData[p].comboObj.offsetWidth; // 리플로우 강제 트리거
+          pData[p].comboObj.classList.add('active');
+        }
+
+        // 시각 효과 (초록색 번쩍임)
+        pData[p].zoneObj.classList.add(`correct-flash-p${p}`);
+        setTimeout(() => pData[p].zoneObj.classList.remove(`correct-flash-p${p}`), 150);
+
+        // 중앙 방어벽 밀어내기 타격감 효과
+        const wall = document.getElementById('centerWall');
+        wall.style.transform = p === 1 ? 'translateX(-5px)' : 'translateX(5px)';
+        wall.style.backgroundColor = '#cbd5e1';
+        setTimeout(() => {
+          wall.style.transform = 'translateX(0)';
+          wall.style.background = '';
+        }, 100);
+
+        generateProblem(p);
+
+      } else {
+        // 오답 처리
+        AudioEngine.sfx.wrong();
+        pData[p].combo = 0; // 콤보 브레이크
+        
+        // ✅ 요청사항 반영: 피버타임에는 오답 페널티 2배 (기본 5점 감점 -> 피버 10점 감점)
+        const penalty = isFeverTime ? 10 : 5;
+        pData[p].score = Math.max(0, pData[p].score - penalty); // 0점 이하 방어
+        pData[p].scoreObj.innerText = pData[p].score;
+        pData[p].comboObj.classList.remove('active');
+
+        // 시각 효과 (붉은색 번쩍임 및 화면 흔들림)
+        pData[p].zoneObj.classList.add('wrong-flash', 'shake-effect');
+        setTimeout(() => pData[p].zoneObj.classList.remove('wrong-flash', 'shake-effect'), 300);
+        
+        // ✅ 요청사항 반영: 오답 꼼수 방지 - 오답이어도 즉시 새로운 문제가 플립되며 출제됨
+        generateProblem(p);
+      }
+    }
+
+    function endGame() {
+      isPlaying = false;
+      clearInterval(timerId);
+      AudioEngine.stopBGM();
+      AudioEngine.sfx.end();
+
+      // 경고 오버레이 해제
+      document.getElementById('warningOverlay').classList.remove('active');
+
+      const modal = document.getElementById('endModal');
+      const winnerTxt = document.getElementById('winnerText');
+      const scoreTxt = document.getElementById('finalScoreText');
+
+      let winner = '';
+      if(pData[1].score > pData[2].score) {
+        winner = "🏆 1P 승리!";
+        winnerTxt.style.color = 'var(--p1-color)';
+      } else if(pData[2].score > pData[1].score) {
+        winner = "🏆 2P 승리!";
+        winnerTxt.style.color = 'var(--p2-color)';
+      } else {
+        winner = "🤝 무승부!";
+        winnerTxt.style.color = "#ffffff";
+      }
+
+      winnerTxt.innerText = winner;
+      scoreTxt.innerHTML = `[최종 방어 점수]<br><span style="color:#ef4444">1P: ${pData[1].score}점</span> vs <span style="color:#3b82f6">2P: ${pData[2].score}점</span>`;
+      
+      modal.style.display = 'flex';
+    }
+
+    // 키보드 지원 (태블릿이 아닐 경우를 대비)
+    window.addEventListener('keydown', (e) => {
+      if(!isPlaying) return;
+      const key = e.key.toLowerCase();
+      if(key === 'q') checkAnswer(1, 'UP');
+      if(key === 'a') checkAnswer(1, 'DOWN');
+      if(key === 'o') checkAnswer(2, 'UP');
+      if(key === 'l') checkAnswer(2, 'DOWN');
+    });
+  </script>
+</body>
+</html>
